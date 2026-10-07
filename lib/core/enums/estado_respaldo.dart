@@ -1,0 +1,1 @@
+enum EstadoRespaldo { exitoso, error }

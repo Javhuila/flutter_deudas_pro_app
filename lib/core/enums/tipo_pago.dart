@@ -1,0 +1,1 @@
+enum TipoPago { interes, capital }
