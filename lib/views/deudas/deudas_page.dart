@@ -10,7 +10,7 @@ import 'deuda_form_page.dart';
 import 'dialog/deuda_archive_dialog.dart';
 import 'dialog/deuda_cancel_dialog.dart';
 import 'dialog/deuda_delete_dialog.dart';
-import 'info_deuda.dart';
+import 'info_deuda_page.dart';
 import 'sheets/deuda_filter_sheet.dart';
 import 'widgets/deuda_empty.dart';
 import 'widgets/deuda_error.dart';
