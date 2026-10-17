@@ -489,16 +489,13 @@ class DeudaService {
               .map((interes) => interes.numeroPeriodo)
               .reduce((a, b) => a > b ? a : b) +
           1;
-    }
-
-    if (interesesExistentes.isEmpty) {
-      fechaInicio = deuda.fechaPrestamo;
-    } else {
       final ultimo = interesesExistentes.reduce(
         (a, b) => a.numeroPeriodo > b.numeroPeriodo ? a : b,
       );
 
       fechaInicio = ultimo.fechaFin;
+    } else {
+      fechaInicio = deuda.fechaPrestamo;
     }
 
     final nuevosIntereses = <InteresDeuda>[];
@@ -532,35 +529,52 @@ class DeudaService {
       return;
     }
 
-    final ahora = DateTime.now();
     // ---------------------------------------------------------
-    // PERÍODOS POSTERIORES
+    // 3. Deudas no programadas.
     //
-    // A partir del primer período, solamente generamos los
-    // períodos cuyo plazo mensual ya haya llegado.
+    // El primer período se genera inmediatamente, sin esperar
+    // a que transcurra el primer mes.
     //
     // Ejemplo:
+    // Préstamo: 10/09/2026
+    // Período 1: 10/09/2026 -> 10/10/2026
     //
-    // préstamo: 10/09/2026
-    //
-    // período 1:
-    // 10/09 -> 10/10
-    //
-    // período 2 solamente se genera cuando:
-    // fecha actual >= 10/10
-    //
-    // período 3 solamente se genera cuando:
-    // fecha actual >= 10/11
-    //
-    // etc.
+    // El período 2 se genera cuando llega el 10/10/2026.
+    // El período 3 se genera cuando llega el 10/11/2026.
     // ---------------------------------------------------------
-    while (true) {
+    if (interesesExistentes.isEmpty) {
       final fechaFin = _sumarUnMes(fechaInicio);
 
-      // Todavía no se ha completado el período.
-      if (fechaFin.isAfter(ahora)) {
-        break;
-      }
+      final interesInicial = InteresDeuda()
+        ..deuda.value = deuda
+        ..numeroPeriodo = siguientePeriodo
+        ..fechaInicio = fechaInicio
+        ..fechaFin = fechaFin
+        ..porcentaje = deuda.porcentajeInteres
+        ..valor = _calcularInteresPeriodo(deuda)
+        ..valorPagado = 0
+        ..pagado = false
+        ..fechaRegistro = DateTime.now();
+
+      nuevosIntereses.add(interesInicial);
+
+      fechaInicio = fechaFin;
+      siguientePeriodo++;
+    }
+
+    // ---------------------------------------------------------
+    // 4. Generar los períodos posteriores que ya hayan comenzado.
+    //
+    // La condición se basa en la fecha de inicio del nuevo
+    // período, que coincide con la fecha final del anterior.
+    //
+    // Así se evita esperar a que termine el nuevo período
+    // para registrarlo.
+    // ---------------------------------------------------------
+    final ahora = DateTime.now();
+
+    while (!fechaInicio.isAfter(ahora)) {
+      final fechaFin = _sumarUnMes(fechaInicio);
 
       final interes = InteresDeuda()
         ..deuda.value = deuda
@@ -580,7 +594,7 @@ class DeudaService {
     }
 
     // ---------------------------------------------------------
-    // Guardar todos los períodos nuevos.
+    // 5. Guardar los períodos nuevos.
     // ---------------------------------------------------------
     if (nuevosIntereses.isNotEmpty) {
       await _interesRepository.guardarTodos(nuevosIntereses);
