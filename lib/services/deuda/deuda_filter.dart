@@ -51,6 +51,10 @@ class DeudaFilter {
         hasta != null;
   }
 
+  bool get tieneFiltroFecha {
+    return desde != null || hasta != null;
+  }
+
   ///==========================================================
   /// COPY WITH
   ///==========================================================
