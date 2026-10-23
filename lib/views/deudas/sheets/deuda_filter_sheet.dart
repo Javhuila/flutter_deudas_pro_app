@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/constants/app_constants.dart';
 import '../../../core/enums/estado_deuda.dart';
 import '../../../services/deuda/deuda_filter.dart';
 
@@ -174,7 +175,65 @@ class _DeudaFilterSheetState extends State<DeudaFilterSheet> {
                   });
                 },
               ),
+              const SizedBox(height: 20),
+              Text(
+                'Fecha de la deuda',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
 
+              const SizedBox(height: 12),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _seleccionarFecha(esDesde: true),
+                      icon: const Icon(Icons.calendar_today_outlined),
+                      label: Text(
+                        _filter.desde == null
+                            ? 'Desde'
+                            : AppConstants.formatearFecha(_filter.desde!),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 12),
+
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _seleccionarFecha(esDesde: false),
+                      icon: const Icon(Icons.calendar_today_outlined),
+                      label: Text(
+                        _filter.hasta == null
+                            ? 'Hasta'
+                            : AppConstants.formatearFecha(_filter.hasta!),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              if (_filter.tieneFiltroFecha) ...[
+                const SizedBox(height: 8),
+
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: () {
+                      setState(() {
+                        _filter = _filter.copyWith(
+                          clearDesde: true,
+                          clearHasta: true,
+                        );
+                      });
+                    },
+                    icon: const Icon(Icons.clear),
+                    label: const Text('Limpiar fechas'),
+                  ),
+                ),
+              ],
               const SizedBox(height: 20),
 
               Text(
@@ -244,5 +303,30 @@ class _DeudaFilterSheetState extends State<DeudaFilterSheet> {
         ),
       ),
     );
+  }
+
+  Future<void> _seleccionarFecha({required bool esDesde}) async {
+    final fechaInicial = esDesde ? _filter.desde : _filter.hasta;
+
+    final fecha = await showDatePicker(
+      context: context,
+      initialDate: fechaInicial ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+
+    if (fecha == null || !mounted) {
+      return;
+    }
+
+    setState(() {
+      if (esDesde) {
+        _filter = _filter.copyWith(desde: fecha);
+      } else {
+        _filter = _filter.copyWith(
+          hasta: DateTime(fecha.year, fecha.month, fecha.day, 23, 59, 59, 999),
+        );
+      }
+    });
   }
 }
