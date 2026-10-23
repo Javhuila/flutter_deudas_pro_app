@@ -124,11 +124,15 @@ class RespaldoInfoCard extends StatelessWidget {
 
                   const SizedBox(width: 8),
 
-                  Text(
-                    _formatearEstado(respaldo!.estado),
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: estadoColor,
-                      fontWeight: FontWeight.w600,
+                  Expanded(
+                    child: Text(
+                      _formatearEstado(respaldo!.estado),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: estadoColor,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
