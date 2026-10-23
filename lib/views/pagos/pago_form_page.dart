@@ -33,6 +33,10 @@ class _PagoFormPageState extends ConsumerState<PagoFormPage> {
   late final TextEditingController _referenciaController;
   late final TextEditingController _observacionController;
 
+  final FocusNode _valorPagoFocusNode = FocusNode();
+  final FocusNode _referenciaFocusNode = FocusNode();
+  final FocusNode _observacionFocusNode = FocusNode();
+
   Deuda? _deudaSeleccionadaActual;
   bool _cargandoDeudaInicial = false;
   bool _cargandoConceptos = false;
@@ -261,6 +265,9 @@ class _PagoFormPageState extends ConsumerState<PagoFormPage> {
     _valorController.dispose();
     _referenciaController.dispose();
     _observacionController.dispose();
+    _valorPagoFocusNode.dispose();
+    _referenciaFocusNode.dispose();
+    _observacionFocusNode.dispose();
     super.dispose();
   }
 
@@ -269,251 +276,261 @@ class _PagoFormPageState extends ConsumerState<PagoFormPage> {
     final theme = Theme.of(context);
     final isEditing = widget.isEditing;
 
-    return Scaffold(
-      appBar: AppBar(title: Text(isEditing ? 'Editar pago' : 'Registrar pago')),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(isEditing ? 'Editar pago' : 'Registrar pago'),
+        ),
 
-      bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.all(16),
-        child: FilledButton.icon(
-          onPressed: _guardando ? null : _guardar,
-          icon: _guardando
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.save_outlined),
-          label: Text(
-            _guardando
-                ? 'Guardando...'
-                : isEditing
-                ? 'Guardar cambios'
-                : 'Registrar pago',
+        bottomNavigationBar: SafeArea(
+          minimum: const EdgeInsets.all(16),
+          child: FilledButton.icon(
+            onPressed: _guardando ? null : _guardar,
+            icon: _guardando
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.save_outlined),
+            label: Text(
+              _guardando
+                  ? 'Guardando...'
+                  : isEditing
+                  ? 'Guardar cambios'
+                  : 'Registrar pago',
+            ),
           ),
         ),
-      ),
 
-      body: SafeArea(
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-            children: [
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Deuda',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      if (_cargandoDeudaInicial)
-                        const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(16),
-                            child: CircularProgressIndicator(),
+        body: SafeArea(
+          child: Form(
+            key: _formKey,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+              children: [
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Deuda',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
                           ),
-                        )
-                      else
-                        _buildDeudaAutocomplete(context),
-                    ],
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        if (_cargandoDeudaInicial)
+                          const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(16),
+                              child: CircularProgressIndicator(),
+                            ),
+                          )
+                        else
+                          _buildDeudaAutocomplete(context),
+                      ],
+                    ),
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Información del pago',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Información del pago',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                      _buildTipoPagoSelector(context),
+                        _buildTipoPagoSelector(context),
 
-                      const SizedBox(height: 16),
-                      const SizedBox(height: 16),
+                        const SizedBox(height: 16),
+                        const SizedBox(height: 16),
 
-                      TextFormField(
-                        controller: _valorController,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(
-                          labelText: 'Valor del pago',
-                          prefixIcon: Icon(Icons.payments_outlined),
-                          prefixText: '\$ ',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          final texto = value?.trim() ?? '';
+                        TextFormField(
+                          controller: _valorController,
+                          focusNode: _valorPagoFocusNode,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          decoration: const InputDecoration(
+                            labelText: 'Valor del pago',
+                            prefixIcon: Icon(Icons.payments_outlined),
+                            prefixText: '\$ ',
+                            border: OutlineInputBorder(),
+                          ),
+                          validator: (value) {
+                            final texto = value?.trim() ?? '';
 
-                          if (texto.isEmpty) {
-                            return 'Ingresa el valor del pago';
-                          }
-
-                          final valor = double.tryParse(
-                            texto.replaceAll(',', '.'),
-                          );
-
-                          if (valor == null) {
-                            return 'Ingresa un valor válido';
-                          }
-
-                          if (valor <= 0) {
-                            return 'El valor debe ser mayor que cero';
-                          }
-
-                          if (_deudaSeleccionada != null) {
-                            if (_tipoPago == TipoPago.capital &&
-                                _deudaSeleccionada!.tieneCuotas &&
-                                _cuotasSeleccionadas.isEmpty) {
-                              return 'Selecciona al menos una cuota';
+                            if (texto.isEmpty) {
+                              return 'Ingresa el valor del pago';
                             }
 
-                            // if (_tipoPago == TipoPago.interes &&
-                            //     _interesSeleccionado == null) {
-                            //   return 'Selecciona un período de interés';
-                            // }
+                            final valor = double.tryParse(
+                              texto.replaceAll(',', '.'),
+                            );
 
-                            if (valor > _saldoDisponible) {
+                            if (valor == null) {
+                              return 'Ingresa un valor válido';
+                            }
+
+                            if (valor <= 0) {
+                              return 'El valor debe ser mayor que cero';
+                            }
+
+                            if (_deudaSeleccionada != null) {
+                              if (_tipoPago == TipoPago.capital &&
+                                  _deudaSeleccionada!.tieneCuotas &&
+                                  _cuotasSeleccionadas.isEmpty) {
+                                return 'Selecciona al menos una cuota';
+                              }
+
+                              // if (_tipoPago == TipoPago.interes &&
+                              //     _interesSeleccionado == null) {
+                              //   return 'Selecciona un período de interés';
+                              // }
+
+                              if (valor > _saldoDisponible) {
+                                return 'El valor no puede superar el saldo disponible '
+                                    '(${AppConstants.formatearMoneda(_saldoDisponible)})';
+                              }
+                            }
+
+                            if (_deudaSeleccionada != null &&
+                                valor > _saldoDisponible) {
                               return 'El valor no puede superar el saldo disponible '
                                   '(${AppConstants.formatearMoneda(_saldoDisponible)})';
                             }
-                          }
 
-                          if (_deudaSeleccionada != null &&
-                              valor > _saldoDisponible) {
-                            return 'El valor no puede superar el saldo disponible '
-                                '(${AppConstants.formatearMoneda(_saldoDisponible)})';
-                          }
-
-                          return null;
-                        },
-                      ),
-
-                      if ((_tipoPago == TipoPago.capital ||
-                              (_deudaSeleccionada?.programada == true &&
-                                  _deudaSeleccionada?.tieneCuotas == true)) &&
-                          _deudaSeleccionada?.tieneCuotas == true) ...[
-                        const SizedBox(height: 16),
-                        _buildCuotasSection(context),
-                      ],
-
-                      if (_tipoPago == TipoPago.interes &&
-                          !(_deudaSeleccionada?.programada == true &&
-                              _deudaSeleccionada?.tieneCuotas == true)) ...[
-                        const SizedBox(height: 16),
-                        _buildInteresSection(context),
-                      ],
-
-                      const SizedBox(height: 16),
-
-                      DropdownButtonFormField<MetodoPago>(
-                        initialValue: _metodoPago,
-                        isExpanded: true,
-                        decoration: const InputDecoration(
-                          labelText: 'Método de pago',
-                          prefixIcon: Icon(Icons.payment_outlined),
-                          border: OutlineInputBorder(),
+                            return null;
+                          },
                         ),
-                        items: const [
-                          DropdownMenuItem(
-                            value: MetodoPago.efectivo,
-                            child: Text('Efectivo'),
-                          ),
-                          DropdownMenuItem(
-                            value: MetodoPago.transferencia,
-                            child: Text('Transferencia'),
-                          ),
-                          DropdownMenuItem(
-                            value: MetodoPago.nequi,
-                            child: Text('Nequi'),
-                          ),
-                          DropdownMenuItem(
-                            value: MetodoPago.otro,
-                            child: Text('Otro'),
-                          ),
+
+                        if ((_tipoPago == TipoPago.capital ||
+                                (_deudaSeleccionada?.programada == true &&
+                                    _deudaSeleccionada?.tieneCuotas == true)) &&
+                            _deudaSeleccionada?.tieneCuotas == true) ...[
+                          const SizedBox(height: 16),
+                          _buildCuotasSection(context),
                         ],
-                        onChanged: _guardando
-                            ? null
-                            : (value) {
-                                if (value == null) {
-                                  return;
-                                }
-                                setState(() {
-                                  _metodoPago = value;
-                                });
-                              },
-                      ),
 
-                      const SizedBox(height: 16),
+                        if (_tipoPago == TipoPago.interes &&
+                            !(_deudaSeleccionada?.programada == true &&
+                                _deudaSeleccionada?.tieneCuotas == true)) ...[
+                          const SizedBox(height: 16),
+                          _buildInteresSection(context),
+                        ],
 
-                      ListTile(
-                        enabled: !_guardando,
-                        contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.calendar_today_outlined),
-                        title: const Text('Fecha del pago'),
-                        subtitle: Text(AppConstants.formatearFecha(_fechaPago)),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: _guardando ? null : _seleccionarFecha,
-                      ),
+                        const SizedBox(height: 16),
 
-                      const SizedBox(height: 8),
-
-                      TextFormField(
-                        controller: _referenciaController,
-                        enabled: !_guardando,
-                        decoration: const InputDecoration(
-                          labelText: 'Referencia',
-                          hintText: 'Ej. número de transferencia',
-                          prefixIcon: Icon(Icons.tag_outlined),
-                          border: OutlineInputBorder(),
+                        DropdownButtonFormField<MetodoPago>(
+                          initialValue: _metodoPago,
+                          isExpanded: true,
+                          decoration: const InputDecoration(
+                            labelText: 'Método de pago',
+                            prefixIcon: Icon(Icons.payment_outlined),
+                            border: OutlineInputBorder(),
+                          ),
+                          items: const [
+                            DropdownMenuItem(
+                              value: MetodoPago.efectivo,
+                              child: Text('Efectivo'),
+                            ),
+                            DropdownMenuItem(
+                              value: MetodoPago.transferencia,
+                              child: Text('Transferencia'),
+                            ),
+                            DropdownMenuItem(
+                              value: MetodoPago.nequi,
+                              child: Text('Nequi'),
+                            ),
+                            DropdownMenuItem(
+                              value: MetodoPago.otro,
+                              child: Text('Otro'),
+                            ),
+                          ],
+                          onChanged: _guardando
+                              ? null
+                              : (value) {
+                                  if (value == null) {
+                                    return;
+                                  }
+                                  setState(() {
+                                    _metodoPago = value;
+                                  });
+                                },
                         ),
-                      ),
 
-                      const SizedBox(height: 16),
+                        const SizedBox(height: 16),
 
-                      TextFormField(
-                        controller: _observacionController,
-                        enabled: !_guardando,
-                        minLines: 3,
-                        maxLines: 5,
-                        textCapitalization: TextCapitalization.sentences,
-                        decoration: const InputDecoration(
-                          labelText: 'Observaciones',
-                          prefixIcon: Icon(Icons.notes_outlined),
-                          alignLabelWithHint: true,
-                          border: OutlineInputBorder(),
+                        ListTile(
+                          enabled: !_guardando,
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(Icons.calendar_today_outlined),
+                          title: const Text('Fecha del pago'),
+                          subtitle: Text(
+                            AppConstants.formatearFecha(_fechaPago),
+                          ),
+                          trailing: const Icon(Icons.chevron_right),
+                          onTap: _guardando ? null : _seleccionarFecha,
                         ),
-                      ),
-                    ],
+
+                        const SizedBox(height: 8),
+
+                        TextFormField(
+                          controller: _referenciaController,
+                          focusNode: _referenciaFocusNode,
+                          enabled: !_guardando,
+                          decoration: const InputDecoration(
+                            labelText: 'Referencia',
+                            hintText: 'Ej. número de transferencia',
+                            prefixIcon: Icon(Icons.tag_outlined),
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        TextFormField(
+                          controller: _observacionController,
+                          focusNode: _observacionFocusNode,
+                          enabled: !_guardando,
+                          minLines: 3,
+                          maxLines: 5,
+                          textCapitalization: TextCapitalization.sentences,
+                          decoration: const InputDecoration(
+                            labelText: 'Observaciones',
+                            prefixIcon: Icon(Icons.notes_outlined),
+                            alignLabelWithHint: true,
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-              if (_deudaSeleccionada != null)
-                _ResumenDeudaCard(
-                  deuda: _deudaSeleccionada!,
-                  saldoDisponible: _saldoDisponible,
-                  tipoPago: _tipoPago,
-                ),
-            ],
+                if (_deudaSeleccionada != null)
+                  _ResumenDeudaCard(
+                    deuda: _deudaSeleccionada!,
+                    saldoDisponible: _saldoDisponible,
+                    tipoPago: _tipoPago,
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -821,6 +838,8 @@ class _PagoFormPageState extends ConsumerState<PagoFormPage> {
   }
 
   Widget _buildDeudaAutocomplete(BuildContext context) {
+    FocusManager.instance.primaryFocus?.unfocus();
+    _valorPagoFocusNode.unfocus();
     return Autocomplete<Deuda>(
       displayStringForOption: (deuda) {
         final cliente = deuda.cliente.value;
@@ -970,6 +989,7 @@ class _PagoFormPageState extends ConsumerState<PagoFormPage> {
   }
 
   Widget _buildTipoPagoSelector(BuildContext context) {
+    FocusManager.instance.primaryFocus?.unfocus();
     final deuda = _deudaSeleccionada;
 
     if (deuda?.programada == true && deuda?.tieneCuotas == true) {
@@ -1110,6 +1130,7 @@ class _PagoFormPageState extends ConsumerState<PagoFormPage> {
   }
 
   Future<void> _mostrarSelectorCuotas(BuildContext context) async {
+    FocusManager.instance.primaryFocus?.unfocus();
     final seleccionadas = List<CuotaDeuda>.from(_cuotasSeleccionadas);
 
     final resultado = await showDialog<List<CuotaDeuda>>(
