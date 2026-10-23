@@ -196,10 +196,14 @@ class DeudaCard extends StatelessWidget {
 
                     const SizedBox(width: 5),
 
-                    Text(
-                      AppConstants.formatearFecha(deuda.fechaVencimiento!),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                    Expanded(
+                      child: Text(
+                        AppConstants.formatearFecha(deuda.fechaVencimiento!),
+                        maxLines: 4,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
                   ],
